@@ -39,3 +39,9 @@
 
 # debug information files
 *.dwo
+
+# C++ Module cache files
+*.pcm
+*.ifc
+.cache/
+CMakeFiles/*/CXX_MODULES/
