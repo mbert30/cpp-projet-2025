@@ -64,6 +64,11 @@ public:
     bool isDeadly() const { return m_type == PlatformType::Deadly; }
 
     /**
+     * @brief Check if platform is unstable
+     */
+    bool isUnstable() const { return m_type == PlatformType::Unstable; }
+
+    /**
      * @brief Get platform type
      */
     PlatformType getType() const { return m_type; }
@@ -97,6 +102,12 @@ inline void Platform::render(SDL_Renderer* renderer) const {
         SDL_RenderFillRect(renderer, &rect);
 
         SDL_SetRenderDrawColor(renderer, 120, 20, 20, 255);
+        SDL_RenderDrawRect(renderer, &rect);
+    } else if (m_type == PlatformType::Unstable) {
+        SDL_SetRenderDrawColor(renderer, 50, 100, 200, 255);
+        SDL_RenderFillRect(renderer, &rect);
+
+        SDL_SetRenderDrawColor(renderer, 30, 60, 140, 255);
         SDL_RenderDrawRect(renderer, &rect);
     } else {
         SDL_SetRenderDrawColor(renderer, 139, 90, 43, 255);

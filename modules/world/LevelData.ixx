@@ -13,7 +13,8 @@ export namespace world {
      */
     enum class PlatformType {
         Normal,
-        Deadly
+        Deadly,
+        Unstable
     };
 
     /**

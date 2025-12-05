@@ -69,6 +69,11 @@ public:
     bool checkDeadlyCollision(float playerX, float playerY, float playerWidth, float playerHeight) const;
 
     /**
+     * @brief Check if player is on an unstable platform
+     */
+    bool checkUnstableCollision(float playerX, float playerY, float playerWidth, float playerHeight) const;
+
+    /**
      * @brief Check if player collected a coin and remove it
      * @return Index of collected coin, or -1 if none
      */
@@ -274,13 +279,11 @@ inline bool Level::checkFinishCollision(float playerX, float playerY, float play
 }
 
 inline bool Level::checkDeadlyCollision(float playerX, float playerY, float playerWidth, float playerHeight) const {
-    // Player bounding box
     float playerLeft = playerX;
     float playerRight = playerX + playerWidth;
     float playerTop = playerY;
     float playerBottom = playerY + playerHeight;
 
-    // Check collision with each deadly platform
     for (const auto& platform : m_platforms) {
         if (platform->isDeadly()) {
             float platformLeft = platform->getLeft();
@@ -288,11 +291,33 @@ inline bool Level::checkDeadlyCollision(float playerX, float playerY, float play
             float platformTop = platform->getTop();
             float platformBottom = platform->getBottom();
 
-            // Check overlap
             bool horizontalOverlap = playerRight > platformLeft && playerLeft < platformRight;
             bool verticalOverlap = playerBottom > platformTop && playerTop < platformBottom;
 
             if (horizontalOverlap && verticalOverlap) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+inline bool Level::checkUnstableCollision(float playerX, float playerY, float playerWidth, float playerHeight) const {
+    float playerLeft = playerX;
+    float playerRight = playerX + playerWidth;
+    float playerBottom = playerY + playerHeight;
+
+    for (const auto& platform : m_platforms) {
+        if (platform->isUnstable()) {
+            float platformLeft = platform->getLeft();
+            float platformRight = platform->getRight();
+            float platformTop = platform->getTop();
+
+            bool horizontalOverlap = playerRight > platformLeft && playerLeft < platformRight;
+            bool onPlatform = playerBottom >= platformTop && playerBottom <= platformTop + 5.0f;
+
+            if (horizontalOverlap && onPlatform) {
                 return true;
             }
         }

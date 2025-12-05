@@ -6,6 +6,7 @@ module;
 #include <chrono>
 #include <iostream>
 #include <stdexcept>
+#include <cstdlib>
 
 export module core.Game;
 import entities.Player;
@@ -80,6 +81,13 @@ private:
     int m_mouseX;
     int m_mouseY;
 
+    bool m_screenShake;
+    float m_shakeTimer;
+    int m_shakeOffsetX;
+    int m_shakeOffsetY;
+    int m_windowOriginalX;
+    int m_windowOriginalY;
+
     static constexpr unsigned int TARGET_FPS = 60;
     static constexpr float TIME_PER_FRAME = 1.0f / TARGET_FPS;
 };
@@ -108,6 +116,12 @@ inline Game::Game(unsigned int width, unsigned int height, const std::string& ti
     , m_keyJump(false)
     , m_mouseX(0)
     , m_mouseY(0)
+    , m_screenShake(false)
+    , m_shakeTimer(0.0f)
+    , m_shakeOffsetX(0)
+    , m_shakeOffsetY(0)
+    , m_windowOriginalX(0)
+    , m_windowOriginalY(0)
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         throw std::runtime_error("SDL initialization failed: " + std::string(SDL_GetError()));
@@ -364,6 +378,15 @@ inline void Game::processEvents() {
 }
 
 inline void Game::update(float deltaTime) {
+    if (m_shakeTimer > 0.0f) {
+        m_shakeTimer -= deltaTime;
+        if (m_shakeTimer <= 0.0f) {
+            m_screenShake = false;
+            m_shakeOffsetX = 0;
+            m_shakeOffsetY = 0;
+        }
+    }
+
     if (m_currentState == GameState::Playing && m_player && m_level) {
         m_player->handleInput(m_keyLeft, m_keyRight, m_keyJump);
 
@@ -405,6 +428,32 @@ inline void Game::update(float deltaTime) {
                 m_coinsCollected = 0;
             }
             return;
+        }
+
+        if (m_level->checkUnstableCollision(
+            m_player->getX(),
+            m_player->getY(),
+            m_player->getWidth(),
+            m_player->getHeight())) {
+            if (!m_screenShake) {
+                m_screenShake = true;
+                m_shakeTimer = 999.0f;
+                SDL_GetWindowPosition(m_window.get(), &m_windowOriginalX, &m_windowOriginalY);
+            }
+        } else {
+            if (m_screenShake && m_shakeTimer > 900.0f) {
+                m_screenShake = false;
+                m_shakeTimer = 0.0f;
+                m_shakeOffsetX = 0;
+                m_shakeOffsetY = 0;
+                SDL_SetWindowPosition(m_window.get(), m_windowOriginalX, m_windowOriginalY);
+            }
+        }
+
+        if (m_screenShake) {
+            m_shakeOffsetX = (rand() % 11) - 5;
+            m_shakeOffsetY = (rand() % 11) - 5;
+            SDL_SetWindowPosition(m_window.get(), m_windowOriginalX + m_shakeOffsetX, m_windowOriginalY + m_shakeOffsetY);
         }
 
         if (m_level->checkCoinCollection(

@@ -42,6 +42,7 @@ export namespace ui {
         std::unique_ptr<Button> m_toolDeleteButton;
         std::unique_ptr<Button> m_toolPlatformButton;
         std::unique_ptr<Button> m_toolDeadlyButton;
+        std::unique_ptr<Button> m_toolUnstableButton;
         std::unique_ptr<Button> m_toolStartButton;
         std::unique_ptr<Button> m_toolFinishButton;
         std::unique_ptr<Button> m_toolCoinButton;
@@ -104,9 +105,10 @@ export namespace ui {
         m_toolDeleteButton = std::make_unique<Button>(drawerX, toolStartY, toolButtonWidth, toolButtonHeight, "X");
         m_toolPlatformButton = std::make_unique<Button>(drawerX, toolStartY + toolSpacing, toolButtonWidth, toolButtonHeight, "P");
         m_toolDeadlyButton = std::make_unique<Button>(drawerX, toolStartY + toolSpacing * 2, toolButtonWidth, toolButtonHeight, "D");
-        m_toolStartButton = std::make_unique<Button>(drawerX, toolStartY + toolSpacing * 3, toolButtonWidth, toolButtonHeight, "S");
-        m_toolFinishButton = std::make_unique<Button>(drawerX, toolStartY + toolSpacing * 4, toolButtonWidth, toolButtonHeight, "F");
-        m_toolCoinButton = std::make_unique<Button>(drawerX, toolStartY + toolSpacing * 5, toolButtonWidth, toolButtonHeight, "C");
+        m_toolUnstableButton = std::make_unique<Button>(drawerX, toolStartY + toolSpacing * 3, toolButtonWidth, toolButtonHeight, "U");
+        m_toolStartButton = std::make_unique<Button>(drawerX, toolStartY + toolSpacing * 4, toolButtonWidth, toolButtonHeight, "S");
+        m_toolFinishButton = std::make_unique<Button>(drawerX, toolStartY + toolSpacing * 5, toolButtonWidth, toolButtonHeight, "F");
+        m_toolCoinButton = std::make_unique<Button>(drawerX, toolStartY + toolSpacing * 6, toolButtonWidth, toolButtonHeight, "C");
 
         m_currentLevel.levelWidthCells = windowWidth / m_currentLevel.gridSize;
         m_currentLevel.levelHeightCells = windowHeight / m_currentLevel.gridSize;
@@ -167,6 +169,7 @@ export namespace ui {
             m_toolDeleteButton->setHovered(m_toolDeleteButton->contains(x, y));
             m_toolPlatformButton->setHovered(m_toolPlatformButton->contains(x, y));
             m_toolDeadlyButton->setHovered(m_toolDeadlyButton->contains(x, y));
+            m_toolUnstableButton->setHovered(m_toolUnstableButton->contains(x, y));
             m_toolStartButton->setHovered(m_toolStartButton->contains(x, y));
             m_toolFinishButton->setHovered(m_toolFinishButton->contains(x, y));
             m_toolCoinButton->setHovered(m_toolCoinButton->contains(x, y));
@@ -210,6 +213,11 @@ export namespace ui {
             m_mode = EditorMode::PlacePlatform;
             m_currentPlatformType = world::PlatformType::Deadly;
             std::cout << "Tool: Lava\n";
+            return core::GameState::LevelEditor;
+        } else if (m_toolUnstableButton->contains(x, y)) {
+            m_mode = EditorMode::PlacePlatform;
+            m_currentPlatformType = world::PlatformType::Unstable;
+            std::cout << "Tool: Unstable Platform\n";
             return core::GameState::LevelEditor;
         } else if (m_toolStartButton->contains(x, y)) {
             m_mode = EditorMode::PlaceStart;
@@ -338,6 +346,11 @@ export namespace ui {
                 SDL_SetRenderDrawColor(renderer, 180, 30, 30, 255);
                 SDL_RenderFillRect(renderer, &rect);
                 SDL_SetRenderDrawColor(renderer, 120, 20, 20, 255);
+                SDL_RenderDrawRect(renderer, &rect);
+            } else if (platform.type == world::PlatformType::Unstable) {
+                SDL_SetRenderDrawColor(renderer, 50, 100, 200, 255);
+                SDL_RenderFillRect(renderer, &rect);
+                SDL_SetRenderDrawColor(renderer, 30, 60, 140, 255);
                 SDL_RenderDrawRect(renderer, &rect);
             } else {
                 SDL_SetRenderDrawColor(renderer, 139, 90, 43, 255);
@@ -558,6 +571,33 @@ export namespace ui {
                 };
                 SDL_RenderCopy(renderer, deadlyText, nullptr, &tr_rect);
                 SDL_DestroyTexture(deadlyText);
+            }
+
+            if (m_mode == EditorMode::PlacePlatform && m_currentPlatformType == world::PlatformType::Unstable) {
+                SDL_SetRenderDrawColor(renderer, 50, 100, 200, 255);
+            } else {
+                SDL_SetRenderDrawColor(renderer, 70, 70, 80, 255);
+            }
+            SDL_Rect unstableRect = {
+                static_cast<int>(m_toolUnstableButton->getX()),
+                static_cast<int>(m_toolUnstableButton->getY()),
+                static_cast<int>(m_toolUnstableButton->getWidth()),
+                static_cast<int>(m_toolUnstableButton->getHeight())
+            };
+            SDL_RenderFillRect(renderer, &unstableRect);
+            SDL_SetRenderDrawColor(renderer, 100, 100, 110, 255);
+            SDL_RenderDrawRect(renderer, &unstableRect);
+            SDL_Texture* unstableText = tr.renderText(renderer, "Instable", 20, labelColor);
+            if (unstableText) {
+                int tw, th;
+                SDL_QueryTexture(unstableText, nullptr, nullptr, &tw, &th);
+                SDL_Rect tr_rect = {
+                    static_cast<int>(m_toolUnstableButton->getX()) + static_cast<int>(m_toolUnstableButton->getWidth()) / 2 - tw / 2,
+                    static_cast<int>(m_toolUnstableButton->getY()) + static_cast<int>(m_toolUnstableButton->getHeight()) / 2 - th / 2,
+                    tw, th
+                };
+                SDL_RenderCopy(renderer, unstableText, nullptr, &tr_rect);
+                SDL_DestroyTexture(unstableText);
             }
 
             renderToolButton(m_toolStartButton, EditorMode::PlaceStart, 50, 200, 50, "Depart");
